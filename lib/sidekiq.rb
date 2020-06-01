@@ -35,7 +35,12 @@ module Sidekiq
     },
     dead_max_jobs: 10_000,
     dead_timeout_in_seconds: 180 * 24 * 60 * 60, # 6 months
-    reloader: proc { |&block| block.call }
+    reloader: proc { |&block| block.call },
+    json: {
+      generator: JSON,
+      dump: :generate,
+      load: :parse
+    }
   }
 
   DEFAULT_WORKER_OPTIONS = {
@@ -176,11 +181,11 @@ module Sidekiq
   end
 
   def self.load_json(string)
-    JSON.parse(string)
+    options[:json][:generator].public_send(options[:json][:load], string)
   end
 
   def self.dump_json(object)
-    JSON.generate(object)
+    options[:json][:generator].public_send(options[:json][:dump], object)
   end
 
   def self.log_formatter
